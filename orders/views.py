@@ -13,6 +13,8 @@ class Orders(generics.ListAPIView):
 
 
 class UserOrders(generics.ListAPIView):
-    queryset = Order.objects.filter()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.request.user.orders_as_customer
