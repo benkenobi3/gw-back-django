@@ -1,7 +1,7 @@
 from django.urls import re_path
-from orders.views import OrderListAPIView
+from orders.views import Orders
 
 
 urlpatterns = [
-    re_path('orders/', OrderListAPIView.as_view(), name='orders-list')
+    re_path('orders/', Orders.as_view(), name='orders-list')
 ]

@@ -8,3 +8,7 @@ class OrderState(enums.TextChoices):
     INFO_REQUIRED = 'info_required'
     DONE = 'done'
     REJECTED = 'rejected'
+
+
+class DocumentType(enums.TextChoices):
+    PDF = 'pdf'

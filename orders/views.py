@@ -3,13 +3,13 @@ from rest_framework.permissions import IsAuthenticated
 
 from orders.models import Order
 from orders.serializers import OrderSerializer
-from orders.permissions import IsAdminOrPerformerUser
+from orders.permissions import IsAdminOrServiceEmployeeUser
 
 
 class Orders(generics.ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrPerformerUser]
+    permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
 
 class UserOrders(generics.ListAPIView):
