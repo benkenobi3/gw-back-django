@@ -25,3 +25,10 @@ class Document(models.Model):
     url = models.CharField(max_length=500, null=False)
     document_type = models.CharField(max_length=20, null=False, default=DocumentType.PDF, choices=DocumentType.choices)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='documents')
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    creation_datetime = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='comments')
