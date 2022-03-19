@@ -6,7 +6,7 @@ from orders.enums import OrderState, DocumentType
 class Order(models.Model):
     title = models.CharField(max_length=100, null=False)
     description = models.TextField()
-    creation_datetime = models.DateTimeField()
+    creation_datetime = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, null=False, default=OrderState.CREATED, choices=OrderState.choices)
 
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_as_customer', null=True)
