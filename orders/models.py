@@ -9,7 +9,7 @@ class Order(models.Model):
     creation_datetime = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, null=False, default=OrderState.CREATED, choices=OrderState.choices)
 
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_as_customer', null=True)
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_as_customer')
     performer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='orders_as_performer', null=True)
 
     def __str__(self):
