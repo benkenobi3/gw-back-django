@@ -6,11 +6,21 @@ from django.dispatch import receiver
 from orders.enums import OrderState, DocumentType
 
 
+class Specialization(models.Model):
+    name = models.CharField(max_length=100, null=False)
+    title = models.CharField(max_length=100, null=False)
+
+    def __str__(self):
+        return self.title
+
+
 class Order(models.Model):
     title = models.CharField(max_length=100, null=False)
     description = models.TextField()
     creation_datetime = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, null=False, default=OrderState.CREATED, choices=OrderState.choices)
+
+    perf_spec = models.ForeignKey(Specialization, on_delete=models.SET_DEFAULT, related_name='orders', default=1)
 
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_as_customer')
     performer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='orders_as_performer', null=True)
@@ -39,6 +49,7 @@ class Comment(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    spec = models.ForeignKey(Specialization, on_delete=models.SET_DEFAULT, related_name='performers', default=1)
 
     @staticmethod
     @receiver(post_save, sender=User)
