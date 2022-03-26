@@ -53,11 +53,14 @@ class Profile(models.Model):
 
     @staticmethod
     @receiver(post_save, sender=User)
-    def create_user_profile(_, instance, created, **kwargs):
+    def create_user_profile(sender, instance, created, **kwargs):
         if created:
             Profile.objects.create(user=instance)
 
     @staticmethod
     @receiver(post_save, sender=User)
-    def save_user_profile(_, instance, **kwargs):
+    def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
+
+    def __str__(self):
+        return self.user.username
