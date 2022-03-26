@@ -115,3 +115,6 @@ class CreateOrder(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         pass
+
+#  добавить типы заявки
+#  добавить типы сотрудников -> типы сотрудников ззахуярить в группы?
