@@ -33,8 +33,16 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'user', 'order']
 
 
-class CreateOrderSerializer(serializers.ModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'title', 'description', 'perf_spec', 'customer']
+        fields = ['id', 'url', 'order']
+
+
+class CreateOrderSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True, required=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'title', 'description', 'perf_spec', 'images', 'customer']
         extra_kwargs = {'perf_spec': {'required': True}}
