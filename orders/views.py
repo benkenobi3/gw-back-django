@@ -7,7 +7,7 @@ from orders.enums import OrderState
 from orders.models import Order, Comment
 from orders.permissions import IsAdminUser, IsAdminOrServiceEmployeeUser
 from orders.serializers import OrderSerializer, CommentSerializer, \
-    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer
+    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, CreateOrderSerializer
 
 
 class Orders(generics.ListAPIView):
@@ -96,3 +96,12 @@ class Comments(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         return super().destroy(self._protected(request, *args, **kwargs))
+
+
+class CreateOrder(generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = CreateOrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        pass
