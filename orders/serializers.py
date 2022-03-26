@@ -36,4 +36,5 @@ class CommentSerializer(serializers.ModelSerializer):
 class CreateOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'title', 'description', 'order']
+        fields = ['id', 'title', 'description', 'perf_spec', 'customer']
+        extra_kwargs = {'perf_spec': {'required': True}}

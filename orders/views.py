@@ -114,7 +114,4 @@ class CreateOrder(generics.CreateAPIView):
         return request, args, kwargs
 
     def create(self, request, *args, **kwargs):
-        pass
-
-#  добавить типы заявки
-#  добавить типы сотрудников -> типы сотрудников ззахуярить в группы?
+        return super().create(self._patch_customer(request, *args, **kwargs))
