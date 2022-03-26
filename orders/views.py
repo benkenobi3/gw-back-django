@@ -103,5 +103,15 @@ class CreateOrder(generics.CreateAPIView):
     serializer_class = CreateOrderSerializer
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _patch_customer(request, *args, **kwargs):
+        user = request.user
+
+        request.data._mutable = True
+        request.data['customer'] = user.pk
+        request.data._mutable = False
+
+        return request, args, kwargs
+
     def create(self, request, *args, **kwargs):
         pass
