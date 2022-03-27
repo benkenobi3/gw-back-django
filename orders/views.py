@@ -35,15 +35,23 @@ class PerformerChanger(generics.RetrieveUpdateAPIView):
     serializer_class = OrderPerformerUpdateSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
-    def put(self, request, *args, **kwargs):
+    def _protected(self, request, *args, **kwargs):
         if request.user.groups.filter(name='service_employee'):
-            request.data['performer'] = request.user.pk
+            instance = self.get_object()
+            if instance.perf_spec == request.user.spec:
+                request.data['performer'] = request.user.pk
+            else:
+                raise ValueError('Your spec is different than order perf_spec')
+
+        return request, args, kwargs
+
+    def put(self, request, *args, **kwargs):
+        request, args, kwargs = self._protected(request, *args, **kwargs)
         return super().put(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
-        if request.user.groups.filter(name='service_employee'):
-            request.data['performer'] = request.user.pk
-        return self.patch(request, *args, **kwargs)
+        request, args, kwargs = self._protected(request, *args, **kwargs)
+        return super().patch(request, *args, **kwargs)
 
 
 class Comments(viewsets.ModelViewSet):
@@ -58,44 +66,47 @@ class Comments(viewsets.ModelViewSet):
 
         return Comment.objects.filter(order__in=self.request.user.orders_as_customer)
 
-    @staticmethod
-    def _protected(request, *args, **kwargs):
+    def _protected(self, request, *args, **kwargs):
 
         user = request.user
-        order_pk = kwargs['pk']
+        order = self.get_object()
 
         request.data._mutable = True
         request.data['user'] = user.pk
-        request.data['order'] = order_pk
+        request.data['order'] = order.pk
         request.data._mutable = False
 
-        if user.groups.filter(name='admin'):
-            allow = True
-        elif user.groups.filter(name='service_employee'):
-            allow = user.orders_as_performer.exclude(status__in=[OrderState.DONE, OrderState.REJECTED]) \
-                .find(pk=order_pk).count() > 0
-        else:
-            allow = user.orders_as_customer.exclude(status__in=[OrderState.DONE, OrderState.REJECTED]) \
-                .find(pk=order_pk).count() > 0
+        if not user.groups.filter(name='admin'):
+            if order.status in [OrderState.DONE, OrderState.REJECTED]:
+                raise ValueError(f'You con not comment {order.status} order')
 
-        if not allow:
-            raise ValueError('You con not change this order')
+            if user.groups.filter(name='service_employee'):
+                allow = order in user.orders_as_performer
+            else:
+                allow = order in user.orders_as_customer
+
+            if not allow:
+                raise ValueError('You con not comment this order')
 
         return request, args, kwargs
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset().get(pk=kwargs['pk'])
+        # Comments list of current order
+        queryset = self.get_queryset().get(order__pk=kwargs['pk'])
         serializer = self.get_serializer(queryset)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        return super().create(self._protected(request, *args, **kwargs))
+        request, args, kwargs = self._protected(request, *args, **kwargs)
+        return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        return super().update(self._protected(request, *args, **kwargs))
+        request, args, kwargs = self._protected(request, *args, **kwargs)
+        return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        return super().destroy(self._protected(request, *args, **kwargs))
+        request, args, kwargs = self._protected(request, *args, **kwargs)
+        return super().destroy(request, *args, **kwargs)
 
 
 class CreateOrder(generics.CreateAPIView):
