@@ -54,6 +54,18 @@ class PerformerChanger(generics.RetrieveUpdateAPIView):
         return super().patch(request, *args, **kwargs)
 
 
+class CreateOrder(generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        request.data['customer'] = str(user.pk)
+        return super().post(request, *args, **kwargs)
+
+
 class Comments(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
@@ -105,15 +117,3 @@ class Comments(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         request, args, kwargs = self._protected(request, *args, **kwargs)
         return super().destroy(request, *args, **kwargs)
-
-
-class CreateOrder(generics.CreateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderCreateSerializer
-    permission_classes = [IsAuthenticated]
-
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        user = request.user
-        request.data['customer'] = str(user.pk)
-        return super().post(request, *args, **kwargs)
