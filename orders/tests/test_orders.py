@@ -74,3 +74,57 @@ class OrdersTestCase(TestCase):
         response = client.get('/api/orders/list')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 1)
+
+    def test_order_create(self):
+        client = Client()
+
+        # Unauthorized
+        response = client.post('/api/orders/create')
+        self.assertEqual(response.status_code, 401)
+
+        client.force_login(user=self.user)
+        orders_count = Order.objects.all().count()
+
+        # Empty data
+        response = client.post('/api/orders/create', data={}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        # Empty nested data
+        data = {
+            'title': 'user-order',
+            'description': 'user-order-description',
+            'perf_spec': self.plumber_spec.pk,
+            'images': []
+        }
+
+        response = client.post('/api/orders/create', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        # Wrong nested data
+        data = {
+            'title': 'user-order',
+            'description': 'user-order-description',
+            'perf_spec': self.plumber_spec.pk,
+            'images': [
+                {'url': 'url'},
+                {'url2': 'url2'}
+            ]
+        }
+
+        response = client.post('/api/orders/create', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        # OK
+        data = {
+            'title': 'user-order',
+            'description': 'user-order-description',
+            'perf_spec': str(self.plumber_spec.pk),
+            'images': [
+                {'url': 'https://image-url/1'},
+                {'url': 'https://image-url/2'},
+            ]
+        }
+
+        response = client.post('/api/orders/create', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Order.objects.all().count(), orders_count+1)

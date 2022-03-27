@@ -1,13 +1,13 @@
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAuthenticated
-
 
 from orders.enums import OrderState
 from orders.models import Order, Comment
 from orders.permissions import IsAdminUser, IsAdminOrServiceEmployeeUser
 from orders.serializers import OrderSerializer, CommentSerializer, \
-    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, CreateOrderSerializer
+    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer
 
 
 class Orders(generics.ListAPIView):
@@ -71,10 +71,8 @@ class Comments(viewsets.ModelViewSet):
         user = request.user
         order = self.get_object()
 
-        request.data._mutable = True
         request.data['user'] = user.pk
         request.data['order'] = order.pk
-        request.data._mutable = False
 
         if not user.groups.filter(name='admin'):
             if order.status in [OrderState.DONE, OrderState.REJECTED]:
@@ -111,18 +109,11 @@ class Comments(viewsets.ModelViewSet):
 
 class CreateOrder(generics.CreateAPIView):
     queryset = Order.objects.all()
-    serializer_class = CreateOrderSerializer
+    serializer_class = OrderCreateSerializer
     permission_classes = [IsAuthenticated]
 
-    @staticmethod
-    def _patch_customer(request, *args, **kwargs):
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
         user = request.user
-
-        request.data._mutable = True
-        request.data['customer'] = user.pk
-        request.data._mutable = False
-
-        return request, args, kwargs
-
-    def create(self, request, *args, **kwargs):
-        return super().create(self._patch_customer(request, *args, **kwargs))
+        request.data['customer'] = str(user.pk)
+        return super().post(request, *args, **kwargs)

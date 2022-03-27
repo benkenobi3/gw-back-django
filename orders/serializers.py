@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
+
 from orders.models import Order, Comment, Image
 from orders.enums import OrderState
 
@@ -36,20 +38,24 @@ class CommentSerializer(serializers.ModelSerializer):
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ['id', 'url', 'order']
+        fields = ['url']
 
 
-class CreateOrderSerializer(serializers.ModelSerializer):
-    images = ImageSerializer(many=True, required=True)
+class OrderCreateSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
 
     class Meta:
-        model = Comment
+        model = Order
         fields = ['id', 'title', 'description', 'perf_spec', 'images', 'customer']
         extra_kwargs = {'perf_spec': {'required': True}}
 
     def create(self, validated_data):
         images_data = validated_data.pop('images')
+        if not images_data:
+            raise ValidationError({'images': ['This field is required.']})
+
         order = Order.objects.create(**validated_data)
         for image_data in images_data:
             Image.objects.create(order=order, **image_data)
+
         return order
