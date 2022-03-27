@@ -118,7 +118,7 @@ class OrdersTestCase(TestCase):
         data = {
             'title': 'user-order',
             'description': 'user-order-description',
-            'perf_spec': str(self.plumber_spec.pk),
+            'perf_spec': self.plumber_spec.pk,
             'images': [
                 {'url': 'https://image-url/1'},
                 {'url': 'https://image-url/2'},
@@ -128,3 +128,22 @@ class OrdersTestCase(TestCase):
         response = client.post('/api/orders/create', data=data, content_type='application/json')
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Order.objects.all().count(), orders_count+1)
+
+    def test_order_status_changer(self):
+        client = Client()
+
+        order = Order.objects.create(title='2', description='2', perf_spec=self.plumber_spec, customer=self.user)
+
+        # Unauthorized
+        response = client.get('/api/orders/1/status')
+        self.assertEqual(response.status_code, 401)
+
+        # Permission denied
+        client.force_login(user=self.user)
+        response = client.get('/api/orders/1/status')
+        self.assertEqual(response.status_code, 403)
+
+        # OK
+        client.force_login(user=self.admin)
+        response = client.get('/api/orders/1/status')
+        self.assertEqual(response.status_code, 200)
