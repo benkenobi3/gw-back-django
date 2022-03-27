@@ -1,10 +1,11 @@
 from django.urls import re_path
-from orders.views import Orders, UserOrders, StatusChanger, PerformerChanger, Comments
+from orders.views import Orders, UserOrders, StatusChanger, PerformerChanger, CreateOrder, Comments
 
 
 urlpatterns = [
-    re_path('orders/all/', Orders.as_view(), name='orders-list'),
-    re_path('orders/my/', UserOrders.as_view(), name='orders-user-list'),
+    re_path('orders/all', Orders.as_view(), name='orders-list'),
+    re_path('orders/list', UserOrders.as_view(), name='orders-user-list'),
+    re_path('orders/create', CreateOrder.as_view(), name='orders-create'),
     re_path('orders/(?P<pk>.*)/status', StatusChanger.as_view(), name='orders-status-changer'),
     re_path('orders/(?P<pk>.*)/performer', PerformerChanger.as_view(), name='orders-performer-changer'),
     re_path('orders/(?P<pk>.*)/comments/list', Comments.as_view({'get': 'list'}), name='orders-comments-list'),
