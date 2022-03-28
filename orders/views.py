@@ -1,6 +1,6 @@
 from django.db import transaction
 from rest_framework.response import Response
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from orders.enums import OrderState
@@ -24,13 +24,14 @@ class UserOrders(generics.ListAPIView):
         return self.request.user.orders_as_customer
 
 
-class StatusChanger(generics.RetrieveUpdateAPIView):
+class StatusChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+    # TODO добавить логику с историей изменения статусов
     queryset = Order.objects.all()
     serializer_class = OrderStatusUpdateSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
 
-class PerformerChanger(generics.RetrieveUpdateAPIView):
+class PerformerChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderPerformerUpdateSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
@@ -38,20 +39,16 @@ class PerformerChanger(generics.RetrieveUpdateAPIView):
     def _protected(self, request, *args, **kwargs):
         if request.user.groups.filter(name='service_employee'):
             instance = self.get_object()
-            if instance.perf_spec == request.user.spec:
+            if instance.perf_spec == request.user.profile.spec:
                 request.data['performer'] = request.user.pk
             else:
                 raise ValueError('Your spec is different than order perf_spec')
 
         return request, args, kwargs
 
-    def put(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         request, args, kwargs = self._protected(request, *args, **kwargs)
-        return super().put(request, *args, **kwargs)
-
-    def patch(self, request, *args, **kwargs):
-        request, args, kwargs = self._protected(request, *args, **kwargs)
-        return super().patch(request, *args, **kwargs)
+        return super().update(request, *args, **kwargs)
 
 
 class CreateOrder(generics.CreateAPIView):

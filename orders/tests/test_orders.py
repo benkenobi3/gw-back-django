@@ -4,6 +4,7 @@ from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 
 from orders.models import Specialization, Order
+from orders.enums import OrderState
 
 
 class OrdersTestCase(TestCase):
@@ -143,7 +144,55 @@ class OrdersTestCase(TestCase):
         response = client.get('/api/orders/1/status')
         self.assertEqual(response.status_code, 403)
 
-        # OK
-        client.force_login(user=self.admin)
+        # OK get
+        client.force_login(user=self.employer)
         response = client.get('/api/orders/1/status')
         self.assertEqual(response.status_code, 200)
+
+        data = {'status': OrderState.REJECTED}
+
+        # OK post
+        client.force_login(user=self.employer)
+        response = client.post('/api/orders/1/status', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_order_performer_changer(self):
+        client = Client()
+
+        order = Order.objects.create(title='2', description='2', perf_spec=self.plumber_spec, customer=self.user)
+
+        # Unauthorized
+        response = client.get('/api/orders/1/performer')
+        self.assertEqual(response.status_code, 401)
+
+        # Permission denied
+        client.force_login(user=self.user)
+        response = client.get('/api/orders/1/performer')
+        self.assertEqual(response.status_code, 403)
+
+        # OK get
+        client.force_login(user=self.employer)
+        response = client.get('/api/orders/1/performer')
+        self.assertEqual(response.status_code, 200)
+
+        data = {'performer': self.admin.pk}
+
+        # Can not set anybody except yourself
+        client.force_login(user=self.employer)
+        response = client.post('/api/orders/1/performer', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['performer'], self.employer.pk)
+
+        # OK post
+        client.force_login(user=self.admin)
+        response = client.post('/api/orders/1/performer', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['performer'], self.admin.pk)
+
+        data['performer'] = self.employer.pk
+
+        # OK post
+        client.force_login(user=self.admin)
+        response = client.post('/api/orders/1/performer', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['performer'], self.employer.pk)
