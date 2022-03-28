@@ -28,6 +28,7 @@ class OrdersTestCase(TestCase):
 
         # Specs
         self.plumber_spec = Specialization.objects.get(name='plumber')
+        self.carpenter_spec = Specialization.objects.get(name='carpenter')
 
         self.employer.profile.spec = self.plumber_spec
         self.employer.save()
@@ -159,7 +160,7 @@ class OrdersTestCase(TestCase):
     def test_order_performer_changer(self):
         client = Client()
 
-        order = Order.objects.create(title='2', description='2', perf_spec=self.plumber_spec, customer=self.user)
+        order = Order.objects.create(title='2', description='2', perf_spec=self.carpenter_spec, customer=self.user)
 
         # Unauthorized
         response = client.get('/api/orders/1/performer')
@@ -176,6 +177,14 @@ class OrdersTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         data = {'performer': self.admin.pk}
+
+        # Not possible to take an order from another spec
+        client.force_login(user=self.employer)
+        response = client.post('/api/orders/1/performer', data=data, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        order.perf_spec = self.plumber_spec
+        order.save()
 
         # Can not set anybody except yourself
         client.force_login(user=self.employer)

@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
-from orders.enums import OrderState
 from orders.models import Order, Comment
 from orders.permissions import IsAdminUser, IsAdminOrServiceEmployeeUser
 from orders.serializers import OrderSerializer, CommentSerializer, \
@@ -36,19 +35,11 @@ class PerformerChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, views
     serializer_class = OrderPerformerUpdateSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
-    def _protected(self, request, *args, **kwargs):
-        if request.user.groups.filter(name='service_employee'):
-            instance = self.get_object()
-            if instance.perf_spec == request.user.profile.spec:
-                request.data['performer'] = request.user.pk
-            else:
-                raise ValueError('Your spec is different than order perf_spec')
-
-        return request, args, kwargs
-
-    def update(self, request, *args, **kwargs):
-        request, args, kwargs = self._protected(request, *args, **kwargs)
-        return super().update(request, *args, **kwargs)
+    def get_serializer_context(self):
+        return {
+            'user': self.request.user,
+            'order_spec': self.get_object().perf_spec
+        }
 
 
 class CreateOrder(generics.CreateAPIView):
@@ -72,45 +63,10 @@ class Comments(viewsets.ModelViewSet):
             return Comment.objects.all()
         if self.request.user.groups.filter(name='service_employee'):
             return Comment.objects.filter(order__in=self.request.user.orders_as_performer)
-
         return Comment.objects.filter(order__in=self.request.user.orders_as_customer)
-
-    def _protected(self, request, *args, **kwargs):
-
-        user = request.user
-        order = self.get_object()
-
-        request.data['user'] = user.pk
-        request.data['order'] = order.pk
-
-        if not user.groups.filter(name='admin'):
-            if order.status in [OrderState.DONE, OrderState.REJECTED]:
-                raise ValueError(f'You con not comment {order.status} order')
-
-            if user.groups.filter(name='service_employee'):
-                allow = order in user.orders_as_performer
-            else:
-                allow = order in user.orders_as_customer
-
-            if not allow:
-                raise ValueError('You con not comment this order')
-
-        return request, args, kwargs
 
     def list(self, request, *args, **kwargs):
         # Comments list of current order
         queryset = self.get_queryset().get(order__pk=kwargs['pk'])
         serializer = self.get_serializer(queryset)
         return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        request, args, kwargs = self._protected(request, *args, **kwargs)
-        return super().create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        request, args, kwargs = self._protected(request, *args, **kwargs)
-        return super().update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        request, args, kwargs = self._protected(request, *args, **kwargs)
-        return super().destroy(request, *args, **kwargs)
