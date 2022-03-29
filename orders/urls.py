@@ -11,6 +11,6 @@ urlpatterns = [
 
     re_path('comments/list', Comments.as_view({'get': 'list'}), name='orders-comments-list'),
     re_path('comments/create', Comments.as_view({'post': 'create'}), name='orders-comments-create'),
-    re_path('comments/update', Comments.as_view({'post': 'update'}), name='orders-comments-update'),
-    re_path('comments/delete', Comments.as_view({'post': 'destroy'}), name='orders-comments-delete'),
+    re_path('comments/(?P<pk>.*)/update', Comments.as_view({'post': 'update'}), name='orders-comments-update'),
+    re_path('comments/(?P<pk>.*)/delete', Comments.as_view({'post': 'destroy'}), name='orders-comments-delete'),
 ]

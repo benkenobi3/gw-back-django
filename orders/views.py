@@ -2,10 +2,9 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
 
 from orders.models import Order, Comment
-from orders.permissions import IsAdminUser, IsAdminOrServiceEmployeeUser, IsAllowToSeeOrderComments
+from orders.permissions import IsAdminOrServiceEmployeeUser, IsAllowToSeeOrderComments
 from orders.serializers import OrderSerializer, CommentSerializer, \
     OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer
 
@@ -65,5 +64,6 @@ class Comments(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        request.data['user'] = str(request.user.pk)
+        # TODO можно создать комментарий в закрытой заявке, но нельзя отредактировать его
+        request.data['user'] = request.user.pk
         return super().create(request, *args, **kwargs)

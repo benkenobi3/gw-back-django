@@ -5,13 +5,6 @@ from orders.models import Order
 from orders.enums import OrderState
 
 
-class IsAdminUser(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.user and request.user.groups.filter(name='admin'):
-            return True
-        return False
-
-
 class IsAdminOrServiceEmployeeUser(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user and request.user.groups.filter(name__in=['admin', 'service_employee']):
@@ -22,9 +15,9 @@ class IsAdminOrServiceEmployeeUser(permissions.BasePermission):
 class IsAllowToSeeOrderComments(permissions.BasePermission):
     def has_permission(self, request, view):
 
-        order_pk = request.query_params.get('order', None)
+        order_pk = request.data.get('order', None)
         if not order_pk:
-            order_pk = request.data.get('order', None)
+            order_pk = request.query_params.get('order', None)
 
         try:
             order = Order.objects.get(pk=order_pk)
@@ -33,10 +26,8 @@ class IsAllowToSeeOrderComments(permissions.BasePermission):
 
         if request.user and request.user.groups.filter(name='admin'):
             return True
-        elif request.user and request.user.groups.filter(name='service_employee'):
-            return order.performer == request.user
         else:
-            return order.customer == request.user
+            return order.performer == request.user or order.customer == request.user
 
     def has_object_permission(self, request, view, obj):
         comment = obj
@@ -44,5 +35,8 @@ class IsAllowToSeeOrderComments(permissions.BasePermission):
         if request.user and not request.user.groups.filter(name='admin'):
             if comment.order.status in [OrderState.DONE, OrderState.REJECTED]:
                 raise PermissionDenied(f'You con not comment {comment.order.status} order')
+
+            if comment.order.pk != request.data['order'] or comment.user.pk != request.data['user']:
+                raise PermissionDenied(f'You con not change order or user fields')
 
         return True

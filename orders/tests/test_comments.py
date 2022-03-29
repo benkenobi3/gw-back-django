@@ -3,7 +3,8 @@ from django.test.client import Client
 from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 
-from orders.models import Specialization, Order
+from orders.enums import OrderState
+from orders.models import Specialization, Order, Comment
 
 
 class CommentsTestCase(TestCase):
@@ -78,6 +79,8 @@ class CommentsTestCase(TestCase):
         order = Order.objects.create(title='1', description='1', perf_spec=self.plumber_spec,
                                      customer=self.commenter, performer=self.main_employer)
 
+        comments_count = order.comments.count()
+
         # Unauthorized
         response = client.post('/api/comments/create')
         self.assertEqual(response.status_code, 401)
@@ -111,3 +114,55 @@ class CommentsTestCase(TestCase):
         client.force_login(self.main_employer)
         response = client.post(f'/api/comments/create', data, content_type)
         self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(order.comments.count(), comments_count+2)
+
+    def test_update_and_delete_comment(self):
+        client = Client()
+
+        order = Order.objects.create(title='1', description='1', perf_spec=self.plumber_spec,
+                                     customer=self.commenter, performer=self.main_employer)
+
+        comment = Comment.objects.create(text='Hello', user=self.commenter, order=order)
+
+        # Unauthorized
+        response = client.post(f'/api/comments/{comment.pk}/update')
+        self.assertEqual(response.status_code, 401)
+
+        content_type = 'application/json'
+        data = {'text': 'hello', 'user': comment.user.pk, 'order': comment.order.pk}
+
+        # Not possible to comment
+        client.force_login(self.other_user)
+        response = client.post(f'/api/comments/{comment.pk}/update', data, content_type)
+        self.assertEqual(response.status_code, 403)
+
+        data['user'] = self.other_user.pk
+
+        # Not possible to change order or user
+        client.force_login(self.commenter)
+        response = client.post(f'/api/comments/{comment.pk}/update', data, content_type)
+        self.assertEqual(response.status_code, 403)
+
+        data['user'] = self.commenter.pk
+
+        # OK
+        client.force_login(self.commenter)
+        response = client.post(f'/api/comments/{comment.pk}/update', data, content_type)
+        self.assertEqual(response.status_code, 200)
+
+        order.status = OrderState.REJECTED
+        order.save()
+
+        # Not possible to change comments in rejected orders
+        client.force_login(self.commenter)
+        response = client.post(f'/api/comments/{comment.pk}/update', data, content_type)
+        self.assertEqual(response.status_code, 403)
+
+        order.status = OrderState.INFO_REQUIRED
+        order.save()
+
+        # Deleted
+        client.force_login(self.commenter)
+        response = client.post(f'/api/comments/{comment.pk}/delete', data, content_type)
+        self.assertEqual(response.status_code, 204)
