@@ -21,10 +21,10 @@ class IsAdminOrServiceEmployeeUser(permissions.BasePermission):
 
 class IsAllowToSeeOrderComments(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method == 'GET':
-            order_pk = request.GET.get('order', None)
-        else:
-            order_pk = request.POST.get('order', None)
+
+        order_pk = request.query_params.get('order', None)
+        if not order_pk:
+            order_pk = request.data.get('order', None)
 
         try:
             order = Order.objects.get(pk=order_pk)
@@ -39,10 +39,10 @@ class IsAllowToSeeOrderComments(permissions.BasePermission):
             return order.customer == request.user
 
     def has_object_permission(self, request, view, obj):
-        order = obj
+        comment = obj
 
         if request.user and not request.user.groups.filter(name='admin'):
-            if order.status in [OrderState.DONE, OrderState.REJECTED]:
-                raise PermissionDenied(f'You con not comment {order.status} order')
+            if comment.order.status in [OrderState.DONE, OrderState.REJECTED]:
+                raise PermissionDenied(f'You con not comment {comment.order.status} order')
 
         return True

@@ -4,7 +4,6 @@ from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 
 from orders.models import Specialization, Order
-from orders.enums import OrderState
 
 
 class CommentsTestCase(TestCase):
@@ -50,25 +49,65 @@ class CommentsTestCase(TestCase):
 
         # 404
         client.force_login(self.other_employer)
-        response = client.get(f'/api/orders/comments/list?order={999}')
+        response = client.get(f'/api/comments/list?order={999}')
         self.assertEqual(response.status_code, 404)
 
         # Not possible to view
         client.force_login(self.other_employer)
-        response = client.get(f'/api/orders/comments/list?order={order.pk}')
+        response = client.get(f'/api/comments/list?order={order.pk}')
         self.assertEqual(response.status_code, 403)
 
         # Not possible to view
         client.force_login(self.other_user)
-        response = client.get(f'/api/orders/comments/list?order={order.pk}')
+        response = client.get(f'/api/comments/list?order={order.pk}')
         self.assertEqual(response.status_code, 403)
 
         # OK
         client.force_login(self.admin)
-        response = client.get(f'/api/orders/comments/list?order={order.pk}')
+        response = client.get(f'/api/comments/list?order={order.pk}')
         self.assertEqual(response.status_code, 200)
 
         # OK
         client.force_login(self.main_employer)
-        response = client.get(f'/api/orders/comments/list?order={order.pk}')
+        response = client.get(f'/api/comments/list?order={order.pk}')
         self.assertEqual(response.status_code, 200)
+
+    def test_create_comment(self):
+        client = Client()
+
+        order = Order.objects.create(title='1', description='1', perf_spec=self.plumber_spec,
+                                     customer=self.commenter, performer=self.main_employer)
+
+        # Unauthorized
+        response = client.post('/api/comments/create')
+        self.assertEqual(response.status_code, 401)
+
+        content_type = 'application/json'
+        data = {'text': 'Hello', 'order': '999'}
+
+        # 404
+        client.force_login(self.other_employer)
+        response = client.post(f'/api/comments/create', data, content_type)
+        self.assertEqual(response.status_code, 404)
+
+        data['order'] = order.pk
+
+        # Not possible to comment
+        client.force_login(self.other_employer)
+        response = client.post(f'/api/comments/create', data, content_type)
+        self.assertEqual(response.status_code, 403)
+
+        # Not possible to comment
+        client.force_login(self.other_user)
+        response = client.post(f'/api/comments/create', data, content_type)
+        self.assertEqual(response.status_code, 403)
+
+        # OK
+        client.force_login(self.admin)
+        response = client.post(f'/api/comments/create', data, content_type)
+        self.assertEqual(response.status_code, 201)
+
+        # OK
+        client.force_login(self.main_employer)
+        response = client.post(f'/api/comments/create', data, content_type)
+        self.assertEqual(response.status_code, 201)
