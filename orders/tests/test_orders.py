@@ -181,7 +181,7 @@ class OrdersTestCase(TestCase):
         # Not possible to take an order from another spec
         client.force_login(user=self.employer)
         response = client.post('/api/orders/1/performer', data=data, content_type='application/json')
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
 
         order.perf_spec = self.plumber_spec
         order.save()

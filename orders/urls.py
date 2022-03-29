@@ -8,8 +8,9 @@ urlpatterns = [
     re_path('orders/create', CreateOrder.as_view(), name='orders-create'),
     re_path('orders/(?P<pk>.*)/status', StatusChanger.as_view({'get': 'retrieve', 'post': 'update'})),
     re_path('orders/(?P<pk>.*)/performer', PerformerChanger.as_view({'get': 'retrieve', 'post': 'update'})),
-    re_path('orders/(?P<pk>.*)/comments/list', Comments.as_view({'get': 'list'}), name='orders-comments-list'),
-    re_path('orders/(?P<pk>.*)/comments/create', Comments.as_view({'post': 'create'}), name='orders-comments-create'),
-    re_path('orders/(?P<pk>.*)/comments/update', Comments.as_view({'post': 'update'}), name='orders-comments-update'),
-    re_path('orders/(?P<pk>.*)/comments/delete', Comments.as_view({'post': 'destroy'}), name='orders-comments-delete'),
+
+    re_path('comments/list', Comments.as_view({'get': 'list'}), name='orders-comments-list'),
+    re_path('comments/create', Comments.as_view({'post': 'create'}), name='orders-comments-create'),
+    re_path('comments/update', Comments.as_view({'post': 'update'}), name='orders-comments-update'),
+    re_path('comments/delete', Comments.as_view({'post': 'destroy'}), name='orders-comments-delete'),
 ]

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ValidationError
 
 from orders.models import Order, Comment, Image
@@ -33,7 +34,7 @@ class OrderPerformerUpdateSerializer(serializers.ModelSerializer):
             if self.context['order_spec'] == self.context['user'].profile.spec:
                 value = self.context['user']
             else:
-                raise ValidationError('Your spec is different than order perf_spec')
+                raise PermissionDenied('Your spec is different than order perf_spec')
         return value
 
 
@@ -41,28 +42,6 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'text', 'user', 'order']
-
-    def validate(self, data):
-
-        user = self.context['user']
-        order = self.context['order']
-
-        data['user'] = user
-        data['order'] = order
-
-        if not user.groups.filter(name='admin'):
-            if order.status in [OrderState.DONE, OrderState.REJECTED]:
-                raise ValidationError(f'You con not comment {order.status} order')
-
-            if user.groups.filter(name='service_employee'):
-                allow = order in user.orders_as_performer
-            else:
-                allow = order in user.orders_as_customer
-
-            if not allow:
-                raise ValidationError('You con not comment this order')
-
-        return data
 
 
 class ImageSerializer(serializers.ModelSerializer):

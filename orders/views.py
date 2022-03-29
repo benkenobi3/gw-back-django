@@ -2,9 +2,10 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 
 from orders.models import Order, Comment
-from orders.permissions import IsAdminUser, IsAdminOrServiceEmployeeUser
+from orders.permissions import IsAdminUser, IsAdminOrServiceEmployeeUser, IsAllowToSeeOrderComments
 from orders.serializers import OrderSerializer, CommentSerializer, \
     OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer
 
@@ -49,24 +50,20 @@ class CreateOrder(generics.CreateAPIView):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        user = request.user
-        request.data['customer'] = str(user.pk)
+        request.data['customer'] = str(request.user.pk)
         return super().post(request, *args, **kwargs)
 
 
 class Comments(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        if self.request.user.groups.filter(name='admin'):
-            return Comment.objects.all()
-        if self.request.user.groups.filter(name='service_employee'):
-            return Comment.objects.filter(order__in=self.request.user.orders_as_performer)
-        return Comment.objects.filter(order__in=self.request.user.orders_as_customer)
+    permission_classes = [IsAuthenticated, IsAllowToSeeOrderComments]
 
     def list(self, request, *args, **kwargs):
-        # Comments list of current order
-        queryset = self.get_queryset().get(order__pk=kwargs['pk'])
-        serializer = self.get_serializer(queryset)
+        queryset = self.get_queryset().filter(order__pk=request.GET['order'])
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        request.data['user'] = str(request.user.pk)
+        return super().create(request, *args, **kwargs)
