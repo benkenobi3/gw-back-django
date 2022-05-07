@@ -12,6 +12,22 @@ class IsAdminOrServiceEmployeeUser(permissions.BasePermission):
         return False
 
 
+class IsAdminOrServiceEmployeeOrCustomer(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.user and \
+                (request.user.groups.filter(name__in=['admin', 'service_employee']) or
+                 request.user == obj.customer):
+            return True
+        return False
+
+
+class IsAdminOrServiceEmployeeOrSelf(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.user and (request.user == obj or request.user.groups.filter(name__in=['admin', 'service_employee'])):
+            return True
+        return False
+
+
 class IsAllowToSeeOrderComments(permissions.BasePermission):
     def has_permission(self, request, view):
 

@@ -5,15 +5,28 @@ from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from orders.models import Order, Comment
-from orders.permissions import IsAdminOrServiceEmployeeUser, IsAllowToSeeOrderComments
-from orders.serializers import OrderSerializer, CommentSerializer, \
+from orders.permissions import IsAdminOrServiceEmployeeUser, \
+    IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, IsAdminOrServiceEmployeeOrSelf
+from orders.serializers import OrderSerializer, CommentSerializer, UserSerializer, \
     OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer, EmployerSerializer
+
+
+class OrderPk(generics.RetrieveAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeOrCustomer]
 
 
 class Orders(generics.ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
+
+
+class UserPk(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeOrSelf]
 
 
 class UserOrders(generics.ListAPIView):
