@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ValidationError
 
-from orders.models import Order, Comment, Image
+from orders.models import Order, Comment, Image, Specialization
 from orders.enums import OrderState
 
 
@@ -11,6 +11,21 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'first_name', 'last_name', 'username']
+
+
+class SpecSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Specialization
+        fields = '__all__'
+
+
+class EmployerSerializer(serializers.ModelSerializer):
+    spec = SpecSerializer(source='profile.spec', read_only=True)
+    is_busy = serializers.FloatField(source='profile.is_busy', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'spec', 'is_busy']
 
 
 class OrderSerializer(serializers.ModelSerializer):

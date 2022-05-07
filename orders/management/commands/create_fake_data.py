@@ -5,6 +5,7 @@ from django.core.management import BaseCommand
 from django.contrib.auth.models import User, Group
 
 from orders.models import Specialization, Order
+from orders.enums import OrderState
 
 
 class Command(BaseCommand):
@@ -101,7 +102,7 @@ class Command(BaseCommand):
             problem = choice(problems[spec.name])
 
             order = Order(title=problem.title, description=problem.description,
-                          customer=user, performer=employer, perf_spec=spec)
+                          customer=user, performer=employer, perf_spec=spec, status=OrderState.APPOINTED)
             orders.append(order)
 
         Order.objects.bulk_create(orders)

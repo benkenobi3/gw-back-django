@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
@@ -6,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from orders.models import Order, Comment
 from orders.permissions import IsAdminOrServiceEmployeeUser, IsAllowToSeeOrderComments
 from orders.serializers import OrderSerializer, CommentSerializer, \
-    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer
+    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer, EmployerSerializer
 
 
 class Orders(generics.ListAPIView):
@@ -21,6 +22,12 @@ class UserOrders(generics.ListAPIView):
 
     def get_queryset(self):
         return self.request.user.orders_as_customer
+
+
+class Employers(generics.ListAPIView):
+    queryset = User.objects.filter(groups__name__in=['service_employee']).prefetch_related('profile')
+    serializer_class = EmployerSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
 
 class StatusChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):

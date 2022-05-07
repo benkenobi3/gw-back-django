@@ -62,5 +62,11 @@ class Profile(models.Model):
     def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
 
+    @property
+    def is_busy(self):
+        progress_statuses = [OrderState.APPOINTED, OrderState.ACCEPTED, OrderState.INFO_REQUIRED]
+        orders_in_progress = self.user.orders_as_performer.filter(status__in=progress_statuses)
+        return bool(orders_in_progress)
+
     def __str__(self):
         return self.user.username
