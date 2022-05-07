@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ValidationError
@@ -6,10 +7,19 @@ from orders.models import Order, Comment, Image
 from orders.enums import OrderState
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'username']
+
+
 class OrderSerializer(serializers.ModelSerializer):
+    customer = UserSerializer()
+    performer = UserSerializer()
+
     class Meta:
         model = Order
-        fields = ['id', 'title', 'description', 'creation_datetime', 'status']
+        fields = ['id', 'title', 'description', 'creation_datetime', 'status', 'customer', 'performer']
 
 
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):
