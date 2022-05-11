@@ -28,13 +28,7 @@ class EmployerSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'spec', 'is_busy']
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    customer = UserSerializer()
-    performer = UserSerializer()
 
-    class Meta:
-        model = Order
-        fields = ['id', 'title', 'description', 'creation_datetime', 'status', 'customer', 'performer']
 
 
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):
@@ -73,6 +67,16 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ['url']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    customer = UserSerializer()
+    performer = UserSerializer()
+    images = ImageSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'title', 'description', 'creation_datetime', 'status', 'customer', 'performer', 'images']
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
