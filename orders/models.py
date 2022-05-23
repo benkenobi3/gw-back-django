@@ -42,6 +42,8 @@ class Document(models.Model):
 
 class Comment(models.Model):
     text = models.TextField()
+    is_active = models.BooleanField(default=True)
+    was_edited = models.BooleanField(default=False)
     creation_datetime = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='comments')

@@ -8,7 +8,8 @@ from orders.models import Order, Comment
 from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, IsAdminOrServiceEmployeeOrSelf
 from orders.serializers import OrderSerializer, CommentSerializer, UserSerializer, \
-    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer, EmployerSerializer
+    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer, \
+    EmployerSerializer, CommentCreationSerializer
 
 
 class OrderPk(generics.RetrieveAPIView):
@@ -75,12 +76,12 @@ class CreateOrder(generics.CreateAPIView):
 
 class Comments(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    serializer_class = CommentCreationSerializer
     permission_classes = [IsAuthenticated, IsAllowToSeeOrderComments]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(order__pk=request.GET['order'])
-        serializer = self.get_serializer(queryset, many=True)
+        queryset = self.get_queryset().filter(order__pk=request.GET['order'], active=True)
+        serializer = CommentSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):

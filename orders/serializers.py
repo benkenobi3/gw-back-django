@@ -28,9 +28,6 @@ class EmployerSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'spec', 'is_busy']
 
 
-
-
-
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
@@ -58,9 +55,24 @@ class OrderPerformerUpdateSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'text', 'user', 'order', 'creation_datetime']
+
+
+class CommentCreationSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Comment
         fields = ['id', 'text', 'user', 'order']
+
+    @staticmethod
+    def validate_text(value):
+        if value.replace(' ', '') == '':
+            raise ValidationError({'text': ['This field can not be empty.']})
+        return value
 
 
 class ImageSerializer(serializers.ModelSerializer):
