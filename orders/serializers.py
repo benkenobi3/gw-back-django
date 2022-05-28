@@ -41,7 +41,10 @@ class OrderPerformerUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
-        instance.status = OrderState.APPOINTED
+        if instance.performer:
+            instance.status = OrderState.APPOINTED
+        else:
+            instance.status = OrderState.CREATED
         instance.save()
         return instance
 
@@ -59,7 +62,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'text', 'user', 'order', 'creation_datetime']
+        fields = ['id', 'text', 'user', 'order', 'creation_datetime', 'is_active', 'was_edited']
+        read_only_fields = ['id', 'user', 'order', 'creation_datetime', 'is_active']
 
 
 class CommentCreationSerializer(serializers.ModelSerializer):
@@ -84,11 +88,13 @@ class ImageSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     customer = UserSerializer()
     performer = UserSerializer()
+    perf_spec = SpecSerializer()
     images = ImageSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'title', 'description', 'creation_datetime', 'status', 'customer', 'performer', 'images']
+        fields = ['id', 'title', 'description', 'creation_datetime',
+                  'status', 'customer', 'performer', 'images', 'perf_spec']
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):

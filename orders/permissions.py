@@ -45,6 +45,9 @@ class IsAllowToSeeOrderComments(permissions.BasePermission):
         else:
             return order.performer == request.user or order.customer == request.user
 
+
+class IsAllowToEditOrDeleteComments(permissions.BasePermission):
+
     def has_object_permission(self, request, view, obj):
         comment = obj
 
@@ -52,7 +55,7 @@ class IsAllowToSeeOrderComments(permissions.BasePermission):
             if comment.order.status in [OrderState.DONE, OrderState.REJECTED]:
                 raise PermissionDenied(f'You con not comment {comment.order.status} order')
 
-            if comment.order.pk != request.data['order'] or comment.user.pk != request.data['user']:
-                raise PermissionDenied(f'You con not change order or user fields')
+            if comment.order.customer != request.user or comment.order.performer != request.user:
+                raise PermissionDenied(f'You con not change this order')
 
         return True
