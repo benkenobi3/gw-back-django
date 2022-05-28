@@ -9,6 +9,18 @@ class OrderState(enums.TextChoices):
     DONE = 'done'
     REJECTED = 'rejected'
 
+    @staticmethod
+    def ru(order_state):
+        dictionary = {
+            'created': 'создана',
+            'appointed': 'назначена',
+            'accepted': 'в\u00a0работе',
+            'info_required': 'требуется\u00a0информация',
+            'done': 'завершена',
+            'rejected': 'отклонена',
+        }
+        return dictionary[order_state]
+
 
 class DocumentType(enums.TextChoices):
     PDF = 'pdf'

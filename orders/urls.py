@@ -1,7 +1,7 @@
 from django.urls import re_path
 from orders.views import Orders, UserOrders, \
     StatusChanger, PerformerChanger, CreateOrder, \
-    Comments, Employers, OrderPk, UserPk, AvailableEmployers, CommentsUpdate
+    Comments, Employers, OrderPk, UserPk, AvailableEmployers, CommentsUpdate, StatusList
 
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     re_path('orders/all', Orders.as_view(), name='orders-list'),
     re_path('orders/list', UserOrders.as_view(), name='orders-user-list'),
     re_path('orders/create', CreateOrder.as_view(), name='orders-create'),
+    re_path('orders/status-list', StatusList.as_view(), name='status-list'),
     re_path('orders/(?P<pk>.*)/$', OrderPk.as_view(), name='orders-retrieve'),
     re_path('orders/(?P<pk>.*)/status$', StatusChanger.as_view({'get': 'retrieve', 'post': 'update'})),
     re_path('orders/(?P<pk>.*)/performer$', PerformerChanger.as_view({'get': 'retrieve', 'post': 'update'})),

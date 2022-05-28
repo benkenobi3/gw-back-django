@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ValidationError
 
-from orders.models import Order, Comment, Image, Specialization
+from orders.models import Order, Comment, Image, Specialization, TimelinePoint
 from orders.enums import OrderState
 
 
@@ -94,7 +94,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'title', 'description', 'creation_datetime',
-                  'status', 'customer', 'performer', 'images', 'perf_spec']
+                  'status', 'customer', 'performer', 'images', 'perf_spec', 'status_locale']
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
@@ -115,3 +115,11 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             Image.objects.create(order=order, **image_data)
 
         return order
+
+
+class TimelinePointSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TimelinePoint
+        fields = '__all__'
+        read_only_fields = ['order']

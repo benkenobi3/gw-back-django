@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
-from orders.models import Order, Comment
+from orders.enums import OrderState
+from orders.models import Order, Comment, TimelinePoint
 from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, \
     IsAdminOrServiceEmployeeOrSelf, IsAllowToEditOrDeleteComments
@@ -58,7 +60,6 @@ class AvailableEmployers(generics.ListAPIView):
 
 
 class StatusChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    # TODO добавить логику с историей изменения статусов
     queryset = Order.objects.all()
     serializer_class = OrderStatusUpdateSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
@@ -117,3 +118,21 @@ class CommentsUpdate(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         request.data['was_edited'] = True
         return super().update(request, *args, **kwargs)
+
+
+class TimelinePoints(generics.ListAPIView):
+    serializer_class = TimelinePoint
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = TimelinePoint.objects.filter(order__pk=request.GET['order'])
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class StatusList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        status_list = [{'status_locale': OrderState.ru(s[0]), 'status': s[0]} for s in OrderState.choices]
+        return Response(status_list)
