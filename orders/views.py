@@ -13,7 +13,7 @@ from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAdminOrServiceEmployeeOrSelf, IsAllowToEditOrDeleteComments
 from orders.serializers import OrderSerializer, CommentSerializer, UserSerializer, \
     OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer, \
-    EmployerSerializer, CommentCreationSerializer
+    EmployerSerializer, CommentCreationSerializer, TimelinePointSerializer
 
 
 class OrderPk(generics.RetrieveAPIView):
@@ -64,6 +64,12 @@ class StatusChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets
     serializer_class = OrderStatusUpdateSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
+    def update(self, request, *args, **kwargs):
+        res = super().update(request, *args, **kwargs)
+        title = f'Статус заявки изменен на "{res.data["status_locale"]}"'
+        TimelinePoint.objects.create(order=self.get_object(), title=title)
+        return res
+
 
 class PerformerChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = Order.objects.all()
@@ -75,6 +81,13 @@ class PerformerChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, views
             'user': self.request.user,
             'order_spec': self.get_object().perf_spec
         }
+
+    def update(self, request, *args, **kwargs):
+        res = super().update(request, *args, **kwargs)
+        performer = User.objects.get(pk=res.data['performer'])
+        title = f'Назначен новый исполнитель - {performer.first_name} {performer.last_name}'
+        TimelinePoint.objects.create(order=self.get_object(), title=title)
+        return res
 
 
 class CreateOrder(generics.CreateAPIView):
@@ -121,7 +134,7 @@ class CommentsUpdate(viewsets.ModelViewSet):
 
 
 class TimelinePoints(generics.ListAPIView):
-    serializer_class = TimelinePoint
+    serializer_class = TimelinePointSerializer
     permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):

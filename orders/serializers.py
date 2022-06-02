@@ -31,7 +31,8 @@ class EmployerSerializer(serializers.ModelSerializer):
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['id', 'status']
+        fields = ['id', 'status', 'status_locale']
+        read_only_fields = ['status_locale']
 
 
 class OrderPerformerUpdateSerializer(serializers.ModelSerializer):
