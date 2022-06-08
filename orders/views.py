@@ -8,13 +8,13 @@ from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from orders.enums import OrderState
-from orders.models import Order, Comment, TimelinePoint, Profile
+from orders.models import Order, Comment, TimelinePoint, Profile, Specialization
 from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, \
     IsAdminOrServiceEmployeeOrSelf, IsAllowToEditOrDeleteComments
 from orders.serializers import OrderSerializer, CommentSerializer, UserSerializer, \
     OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer, \
-    EmployerSerializer, CommentCreationSerializer, TimelinePointSerializer
+    EmployerSerializer, CommentCreationSerializer, TimelinePointSerializer, SpecSerializer
 
 
 class OrderPk(generics.RetrieveAPIView):
@@ -150,6 +150,12 @@ class StatusList(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         status_list = [{'status_locale': OrderState.ru(s[0]), 'status': s[0]} for s in OrderState.choices]
         return Response(status_list)
+
+
+class SpecializationList(generics.ListAPIView):
+    queryset = Specialization.objects.all()
+    serializer_class = SpecSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class BusyChart(generics.ListAPIView):
