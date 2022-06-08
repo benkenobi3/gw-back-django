@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Count
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
@@ -7,7 +8,7 @@ from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from orders.enums import OrderState
-from orders.models import Order, Comment, TimelinePoint
+from orders.models import Order, Comment, TimelinePoint, Profile
 from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, \
     IsAdminOrServiceEmployeeOrSelf, IsAllowToEditOrDeleteComments
@@ -149,3 +150,77 @@ class StatusList(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         status_list = [{'status_locale': OrderState.ru(s[0]), 'status': s[0]} for s in OrderState.choices]
         return Response(status_list)
+
+
+class BusyChart(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
+
+    @staticmethod
+    def get_data_for_doughnut(busy, free):
+        return {
+            'labels': ['Заняты', 'Свободны'],
+            'datasets': [{
+                'label': 'dataset',
+                'data': [busy, free],
+                'backgroundColor': [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)'
+                ]
+            }]
+        }
+
+    def list(self, request, *args, **kwargs):
+
+        chart_list = []
+
+        spec_titles = ['Плотник', 'Электрик', 'Сантехник']
+
+        all_employers = Profile.objects.filter(spec__title__in=spec_titles).prefetch_related('spec')
+        busy_employers = [employer for employer in all_employers if employer.is_busy]
+
+        chart_list.append({
+            'title': 'Все сотрудники',
+            'data': self.get_data_for_doughnut(len(busy_employers), len(all_employers) - len(busy_employers))
+        })
+
+        for title in spec_titles:
+            emp = [employer for employer in all_employers if employer.spec.title == title]
+            busy_emp = [employer for employer in emp if employer.is_busy]
+
+            chart_list.append({
+                'title': title + 'и',
+                'data': self.get_data_for_doughnut(len(busy_emp), len(emp) - len(busy_emp))
+            })
+
+        return Response(chart_list)
+
+
+class StatusChart(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
+
+    @staticmethod
+    def get_data_for_radar(data):
+        return {
+            'labels': ['Создана', 'Назначена', 'В работе', 'Требуется информация', 'Завершена', 'Отклонена'],
+            'datasets': [{
+                'label': 'Статусы заявок',
+                'fill': True,
+                'data': data,
+                'backgroundColor': 'rgba(255, 99, 132, 0.2)',
+                'borderColor': 'rgb(255, 99, 132)',
+                'pointBackgroundColor': 'rgb(255, 99, 132)',
+                'pointBorderColor': '#fff',
+                'pointHoverBackgroundColor': '#fff',
+                'pointHoverBorderColor': 'rgb(255, 99, 132)'
+            }]
+        }
+
+    def retrieve(self, request, *args, **kwargs):
+        counters = Order.objects.all().values('status').annotate(total=Count('status'))
+
+        values = {el[0]: 0 for el in OrderState.choices}
+        for counter in counters:
+            values[counter['status']] = counter['total']
+
+        result = self.get_data_for_radar(list(values.values()))
+        return Response(result)

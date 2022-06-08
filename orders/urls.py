@@ -1,11 +1,15 @@
 from django.urls import re_path
 from orders.views import Orders, UserOrders, \
     StatusChanger, PerformerChanger, CreateOrder, \
-    Comments, Employers, OrderPk, UserPk, AvailableEmployers, CommentsUpdate, StatusList, TimelinePoints
+    Comments, Employers, OrderPk, UserPk, AvailableEmployers, \
+    CommentsUpdate, StatusList, TimelinePoints, BusyChart, StatusChart
 
 urlpatterns = [
     re_path('status/list', StatusList.as_view(), name='status-list'),
     re_path('timeline/list', TimelinePoints.as_view(), name='timeline-list'),
+
+    re_path('charts/busy', BusyChart.as_view(), name='busy-chart'),
+    re_path('charts/status', StatusChart.as_view(), name='status-chart'),
 
     re_path('users/(?P<pk>.*)', UserPk.as_view(), name='users-retrieve'),
     re_path('employers/all', Employers.as_view(), name='employers-list'),
