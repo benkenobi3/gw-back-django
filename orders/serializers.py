@@ -3,13 +3,19 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ValidationError
 
-from orders.models import Order, Comment, Image, Specialization, TimelinePoint
+from orders.models import Order, Comment, Image, Specialization, TimelinePoint, Address
 from orders.enums import OrderState
 
 
 class SpecSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specialization
+        fields = '__all__'
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
         fields = '__all__'
 
 
@@ -84,11 +90,12 @@ class OrderSerializer(serializers.ModelSerializer):
     customer = UserSerializer()
     performer = UserSerializer()
     perf_spec = SpecSerializer()
+    address = AddressSerializer()
     images = ImageSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'title', 'description', 'creation_datetime',
+        fields = ['id', 'title', 'description', 'creation_datetime', 'address', 'flat_number',
                   'status', 'customer', 'performer', 'images', 'perf_spec', 'status_locale']
 
 
@@ -97,7 +104,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'title', 'description', 'perf_spec', 'images', 'customer']
+        fields = ['id', 'title', 'description', 'perf_spec', 'images', 'customer', 'address', 'flat_number']
         extra_kwargs = {'perf_spec': {'required': True}}
 
     def create(self, validated_data):

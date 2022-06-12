@@ -7,13 +7,13 @@ from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from orders.enums import OrderState
-from orders.models import Order, Comment, TimelinePoint, Profile, Specialization
+from orders.models import Order, Comment, TimelinePoint, Profile, Specialization, Address
 from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, \
     IsAdminOrServiceEmployeeOrSelf, IsAllowToEditOrDeleteComments
 from orders.serializers import OrderSerializer, CommentSerializer, UserSerializer, \
     OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer,\
-    CommentCreationSerializer, TimelinePointSerializer, SpecSerializer
+    CommentCreationSerializer, TimelinePointSerializer, SpecSerializer, AddressSerializer
 
 
 class OrderPk(generics.RetrieveAPIView):
@@ -154,6 +154,12 @@ class StatusList(generics.ListAPIView):
 class SpecializationList(generics.ListAPIView):
     queryset = Specialization.objects.all()
     serializer_class = SpecSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class AddressList(generics.ListAPIView):
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
 

@@ -13,6 +13,11 @@ class Specialization(models.Model):
         return self.title
 
 
+class Address(models.Model):
+    location = models.CharField(max_length=100, null=False)
+    name = models.CharField(max_length=100, null=False)
+
+
 class Order(models.Model):
     title = models.CharField(max_length=100, null=False)
     description = models.TextField()
@@ -20,6 +25,8 @@ class Order(models.Model):
     status = models.CharField(max_length=20, null=False, default=OrderState.CREATED, choices=OrderState.choices)
 
     perf_spec = models.ForeignKey(Specialization, on_delete=models.SET_DEFAULT, related_name='orders', default=1)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name='address', null=True)
+    flat_number = models.CharField(max_length=100, null=False, default='не указана')
 
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_as_customer')
     performer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='orders_as_performer', null=True)
