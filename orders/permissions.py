@@ -23,9 +23,9 @@ class IsAdminOrServiceEmployeeOrCustomer(permissions.BasePermission):
 
 class IsAdminOrServiceEmployeeOrSelf(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if request.user and (request.user == obj or request.user.groups.filter(name__in=['admin', 'service_employee'])):
-            return True
-        return False
+        return request.user and (request.user == obj or
+                                 obj.groups.filter(name__in=['admin', 'service_employee']) or
+                                 request.user.groups.filter(name__in=['admin', 'service_employee']))
 
 
 class IsAllowToSeeOrderComments(permissions.BasePermission):

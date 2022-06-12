@@ -2,7 +2,6 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Count
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
@@ -13,8 +12,8 @@ from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, \
     IsAdminOrServiceEmployeeOrSelf, IsAllowToEditOrDeleteComments
 from orders.serializers import OrderSerializer, CommentSerializer, UserSerializer, \
-    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer, \
-    EmployerSerializer, CommentCreationSerializer, TimelinePointSerializer, SpecSerializer
+    OrderStatusUpdateSerializer, OrderPerformerUpdateSerializer, OrderCreateSerializer,\
+    CommentCreationSerializer, TimelinePointSerializer, SpecSerializer
 
 
 class OrderPk(generics.RetrieveAPIView):
@@ -30,7 +29,7 @@ class Orders(generics.ListAPIView):
 
 
 class UserPk(generics.RetrieveAPIView):
-    queryset = User.objects.all()
+    queryset = User.objects.all().select_related('profile')
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeOrSelf]
 
@@ -45,18 +44,18 @@ class UserOrders(generics.ListAPIView):
 
 class Employers(generics.ListAPIView):
     queryset = User.objects.filter(groups__name__in=['service_employee']).select_related('profile')
-    serializer_class = EmployerSerializer
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
 
 class AvailableEmployers(generics.ListAPIView):
-    serializer_class = EmployerSerializer
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
     def list(self, request, *args, **kwargs):
         order = Order.objects.get(pk=request.GET['order'])
         queryset = User.objects.select_related('profile').filter(profile__spec_id=order.perf_spec.pk)
-        serializer = EmployerSerializer(queryset, many=True)
+        serializer = UserSerializer(queryset, many=True)
         return Response(serializer.data)
 
 

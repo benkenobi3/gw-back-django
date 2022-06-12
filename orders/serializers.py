@@ -7,19 +7,13 @@ from orders.models import Order, Comment, Image, Specialization, TimelinePoint
 from orders.enums import OrderState
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'first_name', 'last_name', 'username']
-
-
 class SpecSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specialization
         fields = '__all__'
 
 
-class EmployerSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     spec = SpecSerializer(source='profile.spec', read_only=True)
     is_busy = serializers.FloatField(source='profile.is_busy', read_only=True)
 
