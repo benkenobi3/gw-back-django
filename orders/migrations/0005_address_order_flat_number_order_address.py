@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='order',
             name='flat_number',
-            field=models.CharField(default='не указана', max_length=100),
+            field=models.CharField(default='Не указана', max_length=100),
         ),
         migrations.AddField(
             model_name='order',
