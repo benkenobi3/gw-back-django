@@ -27,6 +27,7 @@ DEBUG = os.environ.get('DEBUG_MODE', 'enabled') == 'enabled'
 
 ALLOWED_HOSTS = ['*']
 CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = ['https://backend.benkenobi3.ru', 'https://frontend.benkenobi3.ru', 'https://tg.benkenobi3.ru']
 
 # Application definition
 
