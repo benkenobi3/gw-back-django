@@ -9,11 +9,11 @@ class Command(BaseCommand):
         super().__init__()
 
         self.urls = [
-            'http://localhost:3000/cats/c1.jpg',
-            'http://localhost:3000/cats/c2.jpg',
-            'http://localhost:3000/cats/c3.jpg',
-            'http://localhost:3000/cats/c4.jpg',
-            'http://localhost:3000/cats/c5.jpg'
+            '/cats/c1.jpg',
+            '/cats/c2.jpg',
+            '/cats/c3.jpg',
+            '/cats/c4.jpg',
+            '/cats/c5.jpg'
         ]
 
     def append_images_to_orders(self):
