@@ -1,13 +1,13 @@
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from orders.enums import OrderState
-from orders.models import Order, Comment, TimelinePoint, Profile, Specialization, Address
+from orders.models import Order, Comment, TimelinePoint, Profile, Specialization, Address, Image
 from orders.permissions import IsAdminOrServiceEmployeeUser, \
     IsAllowToSeeOrderComments, IsAdminOrServiceEmployeeOrCustomer, \
     IsAdminOrServiceEmployeeOrSelf, IsAllowToEditOrDeleteComments
@@ -23,7 +23,18 @@ class OrderPk(generics.RetrieveAPIView):
 
 
 class Orders(generics.ListAPIView):
-    queryset = Order.objects.all()
+    users_queryset = User.objects.all().select_related('profile')
+
+    queryset = Order.objects.all()\
+        .select_related(
+            "perf_spec",
+            "address",
+        )\
+        .prefetch_related(
+            Prefetch("customer", queryset=users_queryset),
+            Prefetch("performer", queryset=users_queryset),
+            Prefetch("images", queryset=Image.objects.all())
+        )
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated, IsAdminOrServiceEmployeeUser]
 
