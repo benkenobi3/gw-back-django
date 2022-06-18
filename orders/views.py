@@ -95,8 +95,12 @@ class PerformerChanger(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, views
 
     def update(self, request, *args, **kwargs):
         res = super().update(request, *args, **kwargs)
-        performer = User.objects.get(pk=res.data['performer'])
-        title = f'Назначен новый исполнитель - {performer.first_name} {performer.last_name}'
+
+        if res.data['performer']:
+            performer = User.objects.get(pk=res.data['performer'])
+            title = f'Назначен новый исполнитель - {performer.first_name} {performer.last_name}'
+        else:
+            title = 'Исполнитель удален'
         TimelinePoint.objects.create(order=self.get_object(), title=title)
         return res
 
