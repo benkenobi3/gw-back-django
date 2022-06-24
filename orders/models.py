@@ -22,6 +22,7 @@ class Order(models.Model):
     title = models.CharField(max_length=100, null=False)
     description = models.TextField()
     creation_datetime = models.DateTimeField(auto_now=True)
+    target_datetime = models.DateTimeField(null=True)
     status = models.CharField(max_length=20, null=False, default=OrderState.CREATED, choices=OrderState.choices)
 
     perf_spec = models.ForeignKey(Specialization, on_delete=models.SET_DEFAULT, related_name='orders', default=1)

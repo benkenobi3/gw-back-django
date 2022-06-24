@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from collections import namedtuple
 from random import choice
 
@@ -102,7 +103,8 @@ class Command(BaseCommand):
             problem = choice(problems[spec.name])
 
             order = Order(title=problem.title, description=problem.description,
-                          customer=user, performer=employer, perf_spec=spec, status=OrderState.APPOINTED)
+                          customer=user, performer=employer, perf_spec=spec, status=OrderState.APPOINTED,
+                          target_datetime=datetime.now() + timedelta(weeks=2))
             orders.append(order)
 
         Order.objects.bulk_create(orders)

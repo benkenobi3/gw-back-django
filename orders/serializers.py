@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -95,7 +97,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'title', 'description', 'creation_datetime', 'address', 'flat_number',
+        fields = ['id', 'title', 'description', 'creation_datetime', 'target_datetime', 'address', 'flat_number',
                   'status', 'customer', 'performer', 'images', 'perf_spec', 'status_locale']
 
 
@@ -111,6 +113,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         images_data = validated_data.pop('images')
         if not images_data:
             raise ValidationError({'images': ['This field is required.']})
+
+        validated_data['target_datetime'] = datetime.now() + timedelta(weeks=2)
 
         order = Order.objects.create(**validated_data)
         for image_data in images_data:
